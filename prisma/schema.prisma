@@ -1,0 +1,42 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Organization {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    name             String
+    adminEmail       String
+    adminClerkUserId String @unique
+
+    context       String?
+    KnowledgeBase KnowledgeBase[]
+}
+
+model KnowledgeBase {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    name      String
+    Faqs      Faq[]
+
+    Organization   Organization? @relation(fields: [organizationId], references: [id])
+    organizationId String?
+}
+
+model Faq {
+    id              String         @id @default(cuid())
+    createdAt       DateTime       @default(now())
+    updatedAt       DateTime       @updatedAt
+    question        String?        @db.Text
+    answer          String?        @db.Text
+    KnowledgeBase   KnowledgeBase? @relation(fields: [knowledgeBaseId], references: [id])
+    knowledgeBaseId String?
+}

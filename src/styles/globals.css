@@ -1,0 +1,184 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Gilroy-Bold:wght@400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Gilroy:wght@400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Satoshi:wght@500&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	:root {
+		--background: 0 0% 100%;
+		--foreground: 222.2 84% 4.9%;
+
+		--card: 0 0% 100%;
+		--card-foreground: 222.2 84% 4.9%;
+
+		--popover: 0 0% 100%;
+		--popover-foreground: 222.2 84% 4.9%;
+
+		--primary: 222.2 47.4% 11.2%;
+		--primary-foreground: 210 40% 98%;
+
+		--secondary: 210 40% 96.1%;
+		--secondary-foreground: 222.2 47.4% 11.2%;
+
+		--muted: 210 40% 96.1%;
+		--muted-foreground: 215.4 16.3% 46.9%;
+
+		--accent: 210 40% 96.1%;
+		--accent-foreground: 222.2 47.4% 11.2%;
+
+		--destructive: 0 84.2% 60.2%;
+		--destructive-foreground: 210 40% 98%;
+
+		--border: 214.3 31.8% 91.4%;
+		--input: 214.3 31.8% 91.4%;
+		--ring: 222.2 84% 4.9%;
+
+		--radius: 0.5rem;
+	}
+
+	.dark {
+		--background: 222.2 84% 4.9%;
+		--foreground: 210 40% 98%;
+
+		--card: 222.2 84% 4.9%;
+		--card-foreground: 210 40% 98%;
+
+		--popover: 222.2 84% 4.9%;
+		--popover-foreground: 210 40% 98%;
+
+		--primary: 210 40% 98%;
+		--primary-foreground: 222.2 47.4% 11.2%;
+
+		--secondary: 217.2 32.6% 17.5%;
+		--secondary-foreground: 210 40% 98%;
+
+		--muted: 217.2 32.6% 17.5%;
+		--muted-foreground: 215 20.2% 65.1%;
+
+		--accent: 217.2 32.6% 17.5%;
+		--accent-foreground: 210 40% 98%;
+
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 210 40% 98%;
+
+		--border: 217.2 32.6% 17.5%;
+		--input: 217.2 32.6% 17.5%;
+		--ring: 212.7 26.8% 83.9%;
+	}
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+
+	body {
+		@apply bg-background text-foreground;
+	}
+}
+
+@layer utilities {
+	.max-container {
+		@apply mx-auto max-w-[1440px];
+	}
+
+	.padding-container {
+		@apply px-6 lg:px-40 2xl:px-0;
+	}
+
+	.hero-ellipse {
+		@apply absolute top-10 w-[976px] h-[976px] rounded-[976px] bg-white opacity-10;
+	}
+}
+
+::-webkit-scrollbar {
+	height: 1px;
+	width: 0px;
+	background: #fff;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #393812;
+	-webkit-border-radius: 1ex;
+	-webkit-box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.75);
+}
+
+.custom-error {
+	margin-top: 2px !important;
+	opacity: 0.8;
+	font-size: 13px;
+}
+
+.placeholder-custom {
+	color: #adadad;
+	font-size: 14px;
+}
+
+.react-time-picker__wrapper {
+	border: 1px solid rgba(204, 204, 204, 0.65) !important;
+	border-radius: 6px;
+}
+
+@keyframes shockwave {
+	0% {
+		transform: scale(1);
+		box-shadow: 0 0 2px rgba(0, 0, 0, 0.15), inset 0 0 1px rgba(0, 0, 0, 0.15);
+	}
+
+	95% {
+		box-shadow: 0 0 50px rgba(0, 0, 0, 0), inset 0 0 30px rgba(0, 0, 0, 0);
+	}
+
+	100% {
+		transform: scale(1.01);
+
+	}
+}
+
+.customAnimation {
+	overflow: hidden;
+}
+
+.customAnimation::before {
+	content: '';
+	position: absolute;
+	height: 100%;
+	width: 20px;
+	background-color: white;
+	opacity: 0.3;
+	transform: skew(15deg);
+	animation: saveBtnWaveAnimate 2s linear infinite;
+	left: 0;
+	overflow: hidden;
+}
+
+
+@keyframes saveBtnWaveAnimate {
+	0% {
+		left: 0;
+	}
+
+	100% {
+		left: 100%
+	}
+}
+
+
+.save-animation {
+	animation: saveShake 2s linear infinite;
+}
+
+@keyframes saveShake {
+	0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-2deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 3px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+

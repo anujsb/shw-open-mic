@@ -1,0 +1,377 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Organization {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    name String  @db.VarChar(255)
+    logo String? @db.VarChar(255)
+
+    // Why do we have strip details over here as well as subscription model?
+
+    stripeCustomerId     String? @db.VarChar(255)
+    stripeSubscriptionId String? @db.VarChar(255)
+
+    twilioSid              String?                 @db.VarChar(255)
+    twilioAuthToken        String?                 @db.VarChar(255)
+    // Need to discuss why we have agency access here as well as in subcription plan.
+    hasAgencyAccess        Boolean                 @default(false)
+    // Need to discuss why we have invite token here.
+    inviteToken            String?                 @db.VarChar(255)
+    Subscription           Subscription?
+    CustomDomains          CustomDomain[]
+    KnowledgeBases         KnowledgeBase[]
+    ContactLists           ContactList[]
+    Campaigns              Campaign[]
+    Interactions           Interaction[]
+    Integrations           Integration[]
+    AccountInOrganizations AccountInOrganization[]
+
+    @@index([stripeCustomerId])
+    @@index([stripeSubscriptionId])
+}
+
+model Subscription {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    endDate DateTime?
+
+    status SubscriptionStatus
+
+    organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    organizationId String       @unique
+
+    stripeSubsciptionId     String           @db.VarChar(255)
+    stripeCustomerId        String           @db.VarChar(255)
+    stripePlanId            String           @db.VarChar(255)
+    minutesUsed             Int              @default(0)
+    minutesCredits          Int              @default(0)
+    subAccountTrialMinutes  Int              @default(0)
+    subAccountCostPerMinute Float            @default(0)
+    subscriptionPlan        SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
+    subscriptionPlanId      String           @unique
+
+    @@index([stripeSubsciptionId])
+    @@index([stripeCustomerId])
+}
+
+model SubscriptionPlan {
+    id              String        @id @default(cuid())
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+    // Need to discuss why we have hasAgencyAccess here as well as in organization.
+    // Need to discuss the below fields.
+    costPerMin      Float
+    name            String        @db.VarChar(255)
+    description     String
+    baseMinutes     Int
+    extraCostPerMin Float
+    audio           String        @db.VarChar(255)
+    monthlyCost     Float
+    priceId         String        @db.VarChar(255)
+    hasAgencyAccess Boolean       @default(false)
+    extraPriceId    String?       @db.VarChar(255)
+    Subscription    Subscription?
+
+    @@index([priceId])
+}
+
+model CustomDomain {
+    id             String       @id @default(cuid())
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+    domain         String       @unique @db.VarChar(255)
+    verified       Boolean      @default(false)
+    organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    organizationId String
+
+    @@index([organizationId])
+}
+
+model Bot {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Need to discuss if below fields are important for LiveKit
+
+    name                String         @db.VarChar(255)
+    webhookUrl          String?        @db.VarChar(255)
+    forwardingNumber    String?        @db.VarChar(20)
+    llmModelTemperature Float?         @default(0.7)
+    llmMaxTokens        Int?           @default(4000)
+    autoEndCall         Boolean        @default(false)
+    calendarId          String?        @db.VarChar(255)
+    voiceId             String?        @db.VarChar(255)
+    script              String?        @db.Text
+    prompt              String?        @db.Text
+    textCallVariables   Json?
+    postCallScript      String?        @db.Text
+    responseDelay       Float          @default(0.1)
+    wordsToInterrupt    Int            @default(2)
+    llmRequestDelay     Int            @default(1)
+    voiceInfo           Json?
+    Campaigns           Campaign[]
+    Interactions        Interaction[]
+    CustomActions       CustomAction[]
+    LLMProvider         LLMProvider?   @relation(fields: [lLMProviderId], references: [id])
+    lLMProviderId       String?
+    VoiceProvider       VoiceProvider? @relation(fields: [voiceProviderId], references: [id])
+    voiceProviderId     String?
+
+    @@index([lLMProviderId])
+    @@index([voiceProviderId])
+}
+
+model KnowledgeBase {
+    id             String       @id @default(cuid())
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+    name           String?      @db.VarChar(255)
+    organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    organizationId String
+    Faqs           Faq[]
+
+    @@index([organizationId])
+}
+
+model Faq {
+    id              String        @id @default(cuid())
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+    question        String?       @db.Text
+    answer          String?       @db.Text
+    knowledgeBase   KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+    knowledgeBaseId String
+
+    @@index([knowledgeBaseId])
+}
+
+model ContactList {
+    id             String       @id @default(cuid())
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+    name           String?      @db.VarChar(255)
+    Contacts       Contact[]
+    organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    organizationId String
+    Campaigns      Campaign[]
+
+    @@index([organizationId])
+}
+
+model Contact {
+    id            String        @id @default(cuid())
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+    name          String?       @db.VarChar(255)
+    email         String?       @db.VarChar(255)
+    phoneNumber   String?       @db.VarChar(20)
+    contactList   ContactList   @relation(fields: [contactListId], references: [id], onDelete: Cascade)
+    contactListId String
+    Interactions  Interaction[]
+    Jobs          Job[]
+
+    @@index([contactListId])
+    @@index([email])
+    @@index([phoneNumber])
+}
+
+model Campaign {
+    id              String        @id @default(cuid())
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+    name            String?       @db.VarChar(255)
+    description     String?       @db.Text
+    dailyBudgetUsed Float?
+    startTime       String?       @db.VarChar(30) // Will accept in ISO UTC format
+    endTime         String?       @db.VarChar(30) // Will accept in ISO UTC format
+    active          Boolean       @default(false)
+    type            CampaignType?
+    organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    organizationId  String
+    contactList     ContactList   @relation(fields: [contactListId], references: [id])
+    contactListId   String
+    bot             Bot           @relation(fields: [botId], references: [id])
+    botId           String
+    Interactions    Interaction[]
+    Jobs            Job[]
+
+    @@index([organizationId])
+    @@index([contactListId])
+    @@index([botId])
+}
+
+model Interaction {
+    id                    String            @id @default(cuid())
+    createdAt             DateTime          @default(now())
+    updatedAt             DateTime          @updatedAt
+    callVendor            String?           @db.VarChar(255)
+    callSid               String?           @db.VarChar(255)
+    recordingUrl          String?           @db.VarChar(255)
+    transcription         Json?
+    postCallNote          String?           @db.Text
+    testCall              Boolean           @default(false)
+    callTransferTriggered Boolean           @default(false)
+    callTransferCompleted Boolean           @default(false)
+    pickedUp              Boolean           @default(false)
+    callDuration          Int?
+    campaign              Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+    campaignId            String
+    bot                   Bot               @relation(fields: [botId], references: [id])
+    botId                 String
+    contact               Contact           @relation(fields: [contactId], references: [id])
+    contactId             String
+    organization          Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    organizationId        String
+    TriggeredActions      TriggeredAction[]
+    Job                   Job?              @relation(fields: [jobId], references: [id])
+    jobId                 String?
+
+    @@index([campaignId])
+    @@index([botId])
+    @@index([contactId])
+    @@index([organizationId])
+    @@index([jobId])
+}
+
+model CustomAction {
+    id               String            @id @default(cuid())
+    createdAt        DateTime          @default(now())
+    updatedAt        DateTime          @updatedAt
+    name             String?           @db.VarChar(255)
+    phrase           String?           @db.VarChar(255)
+    arguments        Json[]
+    bot              Bot               @relation(fields: [botId], references: [id], onDelete: Cascade)
+    botId            String
+    TriggeredActions TriggeredAction[]
+
+    @@index([botId])
+}
+
+model TriggeredAction {
+    id             String       @id @default(cuid())
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+    interaction    Interaction  @relation(fields: [interactionId], references: [id], onDelete: Cascade)
+    interactionId  String
+    customAction   CustomAction @relation(fields: [customActionId], references: [id], onDelete: Cascade)
+    customActionId String
+
+    @@index([interactionId])
+    @@index([customActionId])
+}
+
+model Job {
+    id           String        @id @default(cuid())
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
+    attemptCount Int?
+    completed    Boolean       @default(false)
+    completedAt  DateTime?
+    campaign     Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+    campaignId   String
+    contact      Contact       @relation(fields: [contactId], references: [id])
+    contactId    String
+    Interactions Interaction[]
+
+    @@index([campaignId])
+    @@index([contactId])
+}
+
+model Integration {
+    id             String       @id @default(cuid())
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+    name           String?      @db.VarChar(255)
+    metadata       Json?
+    organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    organizationId String
+
+    @@index([organizationId])
+}
+
+// Do we need this model?
+model Account {
+    id                     String                  @id @default(cuid())
+    createdAt              DateTime                @default(now())
+    updatedAt              DateTime                @updatedAt
+    email                  String?                 @db.VarChar(255)
+    name                   String?                 @db.VarChar(255)
+    phoneNumber            String?                 @db.VarChar(20)
+    verifiedPhoneNumber    Boolean                 @default(false)
+    AccountInOrganizations AccountInOrganization[]
+
+    @@index([email])
+    @@index([phoneNumber])
+}
+
+model AccountInOrganization {
+    id             String       @id @default(cuid())
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+    isAdmin        Boolean      @default(false)
+    // Do we need this?
+    botCallMade    Boolean      @default(false)
+    account        Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+    accountId      String
+    organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    organizationId String
+
+    @@index([accountId])
+    @@index([organizationId])
+}
+
+model LLMProvider {
+    id               String   @id @default(cuid())
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+    modelName        String?  @db.VarChar(255)
+    modelTemperature Float?
+    Bots             Bot[]
+}
+
+model VoiceProvider {
+    id            String       @id @default(cuid())
+    createdAt     DateTime     @default(now())
+    updatedAt     DateTime     @updatedAt
+    name          String?      @db.VarChar(255)
+    voiceId       String?      @db.VarChar(255)
+    voiceSettings Json?
+    Bots          Bot[]
+    VoiceAgents   VoiceAgent[]
+}
+
+model VoiceAgent {
+    id              String        @id @default(cuid())
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+    name            String?       @db.VarChar(255)
+    voiceId         String?       @db.VarChar(255)
+    sampleUrl       String?       @db.VarChar(255)
+    voiceProvider   VoiceProvider @relation(fields: [voiceProviderId], references: [id], onDelete: Cascade)
+    voiceProviderId String
+
+    @@index([voiceProviderId])
+}
+
+enum SubscriptionStatus {
+    ACTIVE
+    CANCELLED
+    TRIAL
+    TRIAL_ENDED
+}
+
+enum CampaignType {
+    VOICE
+}
